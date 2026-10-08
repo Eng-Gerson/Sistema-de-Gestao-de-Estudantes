@@ -1,6 +1,3 @@
-enum Estado{
-    VAZIO,OCUPADO,REMOVIDO;
-}
 public class Entrada {
     private Estudante estudante;
     private Estado estado;
@@ -15,5 +12,13 @@ public class Entrada {
 
     public Estado getEstado() {
         return estado;
+    }
+
+    public void setEstado(Estado estado) {
+        this.estado = estado;
+    }
+    
+    public void setEstudante(Estudante estudante) {
+        this.estudante = estudante;
     }
 }
