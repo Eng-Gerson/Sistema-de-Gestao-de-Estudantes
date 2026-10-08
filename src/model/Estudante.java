@@ -1,3 +1,5 @@
+package model;
+
 public class Estudante {
     private String codigo;
     private String nome;
@@ -63,15 +65,15 @@ public class Estudante {
 
     @Override
     public java.lang.String toString() {
-        return "Estudante{" +
-                "codigo='" + codigo + '\'' +
-                ", nome='" + nome + '\'' +
-                ", curso='" + curso + '\'' +
-                ", ano=" + ano +
-                ", idade=" + idade +
-                ", sexo='" + sexo + '\'' +
-                ", media=" + media +
-                '}';
+        return "Estudante { " +
+                "codigo: " + codigo +
+                ", nome: " + nome +
+                ", curso: " + curso +
+                ", ano: " + ano +
+                ", idade: " + idade +
+                ", sexo: " + sexo +
+                ", media: " + media +
+                " }\n";
     }
 
 }

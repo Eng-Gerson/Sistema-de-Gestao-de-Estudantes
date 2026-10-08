@@ -1,3 +1,8 @@
+package hash;
+
+import java.util.ArrayList;
+import java.util.List;
+import model.*;
 
 public class TabelaHash {
 
@@ -240,6 +245,16 @@ public class TabelaHash {
             }
         }
         return true;
+    }
+
+    public List<Estudante> listar() {
+        List<Estudante> lista = new ArrayList<>();
+        for(Entrada e : tabela) {
+            if (e.getEstado() == Estado.OCUPADO) {
+                lista.add(e.getEstudante());
+            }
+        }
+        return lista;
     }
 
     public int getTamanho() {

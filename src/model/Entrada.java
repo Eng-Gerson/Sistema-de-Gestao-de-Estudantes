@@ -1,3 +1,5 @@
+package model;
+
 public class Entrada {
     private Estudante estudante;
     private Estado estado;
