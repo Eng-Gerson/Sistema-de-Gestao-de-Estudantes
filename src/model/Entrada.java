@@ -2,21 +2,21 @@ package model;
 
 public class Entrada {
     private Estudante estudante;
-    private Estado estado;
+    private EstadoEntrada estado;
     public Entrada(){
         estudante = null;
-        estado = Estado.VAZIO;
+        estado = EstadoEntrada.VAZIO;
     }
 
     public Estudante getEstudante() {
         return estudante;
     }
 
-    public Estado getEstado() {
+    public EstadoEntrada getEstado() {
         return estado;
     }
 
-    public void setEstado(Estado estado) {
+    public void setEstado(EstadoEntrada estado) {
         this.estado = estado;
     }
     

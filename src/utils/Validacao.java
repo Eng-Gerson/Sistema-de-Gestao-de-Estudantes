@@ -22,9 +22,9 @@ public class Validacao {
             || estudante.getMedia() < 0;
 
         if (invalido) {
-            resposta = new Resposta("Os dados do estudante são inválidos", Estado.INVALIDO);
+            resposta = new Resposta("Os dados do estudante são inválidos", EstadoValidacao.INVALIDO);
         } else {
-            resposta = new Resposta("Os dados do estudante são válidos", Estado.VALIDO);
+            resposta = new Resposta("Os dados do estudante são válidos", EstadoValidacao.VALIDO);
         }
 
         return resposta;

@@ -1,0 +1,4 @@
+# Ficheiros compilados (gerados pelo javac / IDE)
+*.class
+bin/
+out/

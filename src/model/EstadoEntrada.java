@@ -1,5 +1,5 @@
 package model;
 
-public enum Estado{
+public enum EstadoEntrada {
     VAZIO,OCUPADO,REMOVIDO
 }

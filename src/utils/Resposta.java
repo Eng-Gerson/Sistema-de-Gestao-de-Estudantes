@@ -2,9 +2,9 @@ package utils;
 
 public class Resposta {
     private String mensagem;
-    private Estado estado;
+    private EstadoValidacao estado;
 
-    public Resposta(String mensagem, Estado estado) {
+    public Resposta(String mensagem, EstadoValidacao estado) {
         this.mensagem = mensagem;
         this.estado = estado;
     }
@@ -13,7 +13,7 @@ public class Resposta {
         return mensagem;
     }
 
-    public Estado getEstado() {
+    public EstadoValidacao getEstado() {
         return estado;
     }
 
@@ -21,7 +21,7 @@ public class Resposta {
         this.mensagem = mensagem;
     }
 
-    public void setEstado(Estado estado) {
+    public void setEstado(EstadoValidacao estado) {
         this.estado = estado;
     }
 

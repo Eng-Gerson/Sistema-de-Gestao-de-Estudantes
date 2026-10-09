@@ -11,6 +11,7 @@ public class TabelaHash {
 
     private Entrada[] tabela;
     private int tamanho; // n = posições OCUPADAS
+    private int removidos; 
 
     // Pra estatísticas
     private int capacidadeInicial;
@@ -19,7 +20,8 @@ public class TabelaHash {
     private int numInsercoes;
     private int maiorSondagem;
     private int numRedimensionamentos;
-    private int ultimasSondagens; // sondagens pra ver se ajudam na Estatistica
+    private int numLimpezas;
+    private int ultimasSondagens;
 
     public TabelaHash() {
         this(CAPACIDADE_PADRAO);
@@ -32,6 +34,7 @@ public class TabelaHash {
 
         capacidade = proximoPrimo(capacidade);
         this.tamanho = 0;
+        this.removidos = 0;
         this.capacidadeInicial = capacidade;
         this.tabela = criarTabelaVazia(capacidade);
         this.totalColisoes = 0;
@@ -39,6 +42,7 @@ public class TabelaHash {
         this.numInsercoes = 0;
         this.maiorSondagem = 0;
         this.numRedimensionamentos = 0;
+        this.numLimpezas = 0;
         this.ultimasSondagens = 0;
     }
 
@@ -64,19 +68,19 @@ public class TabelaHash {
             Entrada entrada = tabela[pos];
             sondagens++;
 
-            if (entrada.getEstado() == Estado.VAZIO) {
+            if (entrada.getEstado() == EstadoEntrada.VAZIO) {
                 posicaoVazia = pos;
                 break;
             }
 
-            if (entrada.getEstado() == Estado.REMOVIDO) {
+            if (entrada.getEstado() == EstadoEntrada.REMOVIDO) {
                 // Podemos encontrar mesmo codigo lá à frente
                 if (primeiroRemovido == -1) {
                     primeiroRemovido = pos;
                 }
             } else {
                 if (entrada.getEstudante().getCodigo().equals(codigo)) {
-                    throw new IllegalArgumentException("Código duplicado: " + codigo);
+                    throw new CodigoDuplicadoException(codigo);
                 }
                 colisoes++;
             }
@@ -87,6 +91,7 @@ public class TabelaHash {
         int destino;
         if (primeiroRemovido != -1) {
             destino = primeiroRemovido;
+            removidos--; // o REMOVIDO é reaproveitado
         } else {
             destino = posicaoVazia;
         }
@@ -96,7 +101,7 @@ public class TabelaHash {
         }
 
         tabela[destino].setEstudante(estudante);
-        tabela[destino].setEstado(Estado.OCUPADO);
+        tabela[destino].setEstado(EstadoEntrada.OCUPADO);
         tamanho++;
 
         // Aqui já contamos inserções que passaram
@@ -108,23 +113,27 @@ public class TabelaHash {
         }
 
         if (getFactorCarga() > FACTOR_CARGA_MAXIMO) {
-            redimensionar();
+            reconstruir(proximoPrimo(2 * tabela.length));
+            numRedimensionamentos++;
+        } else if ((double) (tamanho + removidos) / tabela.length > FACTOR_CARGA_MAXIMO) {
+            // Os REMOVIDO não contam para α, mas também não são VAZIO. Vamos diminuir pra
+            // poder tornar pesquisa mais eficaz
+            reconstruir(tabela.length);
+            numLimpezas++;
         }
     }
 
-    private void redimensionar() {
+    private void reconstruir(int novaCapacidade) {
         Entrada[] antiga = tabela;
-        int novaCapacidade = proximoPrimo(2 * antiga.length);
 
         tabela = criarTabelaVazia(novaCapacidade);
         // Só os OCUPADO passam; os REMOVIDO desaparecem.
         for (int i = 0; i < antiga.length; i++) {
-            if (antiga[i].getEstado() == Estado.OCUPADO) {
+            if (antiga[i].getEstado() == EstadoEntrada.OCUPADO) {
                 reinserir(antiga[i].getEstudante());
             }
         }
-
-        numRedimensionamentos++;
+        removidos = 0;
     }
 
     private void reinserir(Estudante estudante) {
@@ -132,12 +141,11 @@ public class TabelaHash {
         int pos = h1(k);
         int passo = h2(k);
 
-        // A tabela nova não tem REMOVIDO, por isso basta VAZIO.
-        while (tabela[pos].getEstado() != Estado.VAZIO) {
+        while (tabela[pos].getEstado() != EstadoEntrada.VAZIO) {
             pos = (pos + passo) % tabela.length;
         }
         tabela[pos].setEstudante(estudante);
-        tabela[pos].setEstado(Estado.OCUPADO);
+        tabela[pos].setEstado(EstadoEntrada.OCUPADO);
     }
 
     public Estudante pesquisar(String codigo) {
@@ -155,8 +163,9 @@ public class TabelaHash {
         }
 
         tabela[pos].setEstudante(null);
-        tabela[pos].setEstado(Estado.REMOVIDO);
+        tabela[pos].setEstado(EstadoEntrada.REMOVIDO);
         tamanho--;
+        removidos++;
         return true;
     }
 
@@ -173,11 +182,11 @@ public class TabelaHash {
             Entrada actual = tabela[pos];
             ultimasSondagens++;
 
-            if (actual.getEstado() == Estado.VAZIO) {
+            if (actual.getEstado() == EstadoEntrada.VAZIO) {
                 return -1;
             }
 
-            if (actual.getEstado() == Estado.OCUPADO
+            if (actual.getEstado() == EstadoEntrada.OCUPADO
                     && codigo.equals(actual.getEstudante().getCodigo())) {
                 return pos;
             }
@@ -186,6 +195,51 @@ public class TabelaHash {
         }
 
         return -1;
+    }
+
+    // Para auxiliar na defesa. Podemos ou não remover
+    public String descreverSondagem(String codigo) {
+        if (codigo == null || codigo.isEmpty())
+            throw new IllegalArgumentException("Código inválido");
+
+        int k = converterChave(codigo);
+        int pos = h1(k);
+        int passo = h2(k);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Código ").append(codigo)
+          .append(": k=").append(k)
+          .append(", h1=").append(pos)
+          .append(", h2=").append(passo)
+          .append(", m=").append(tabela.length).append('\n');
+
+        for (int i = 0; i < tabela.length; i++) {
+            Entrada actual = tabela[pos];
+            sb.append("  i=").append(i)
+              .append(" -> posição ").append(pos)
+              .append(": ").append(actual.getEstado());
+
+            if (actual.getEstado() == EstadoEntrada.OCUPADO) {
+                String outro = actual.getEstudante().getCodigo();
+                sb.append(" (").append(outro).append(')');
+                if (outro.equals(codigo)) {
+                    sb.append(" <- encontrado\n");
+                    return sb.toString();
+                }
+                sb.append(" <- colisão");
+            }
+            sb.append('\n');
+
+            if (actual.getEstado() == EstadoEntrada.VAZIO) {
+                sb.append("  Não existe na tabela.\n");
+                return sb.toString();
+            }
+
+            pos = (pos + passo) % tabela.length;
+        }
+
+        sb.append("  Não existe na tabela (tabela percorrida por completo).\n");
+        return sb.toString();
     }
 
     // Funcoes hash
@@ -250,7 +304,7 @@ public class TabelaHash {
     public List<Estudante> listar() {
         List<Estudante> lista = new ArrayList<>();
         for(Entrada e : tabela) {
-            if (e.getEstado() == Estado.OCUPADO) {
+            if (e.getEstado() == EstadoEntrada.OCUPADO) {
                 lista.add(e.getEstudante());
             }
         }
@@ -281,8 +335,23 @@ public class TabelaHash {
         return maiorSondagem;
     }
 
+    public double getMediaSondagens() {
+        if (numInsercoes == 0) {
+            return 0;
+        }
+        return (double) totalSondagens / numInsercoes;
+    }
+
     public int getNumRedimensionamentos() {
         return numRedimensionamentos;
+    }
+
+    public int getNumLimpezas() {
+        return numLimpezas;
+    }
+
+    public int getRemovidos() {
+        return removidos;
     }
 
     public int getUltimasSondagens() {

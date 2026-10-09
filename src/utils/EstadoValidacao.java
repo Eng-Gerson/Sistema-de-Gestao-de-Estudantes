@@ -1,5 +1,5 @@
 package utils;
 
-public enum Estado {
+public enum EstadoValidacao {
     VALIDO, INVALIDO
 }
