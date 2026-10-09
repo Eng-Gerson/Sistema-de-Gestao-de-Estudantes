@@ -39,11 +39,15 @@ public class LeitorCSV {
 
                     Resposta resposta = Validacao.validarEstudante(estudante);
 
-                    if(resposta.getEstado() == Estado.VALIDO) {
-                        dados.inserir(estudante);
-                    } else {
-                        dados.incrementarInvalidos();
+                    switch(resposta.getEstado()) {
+                        case Estado.VALIDO: dados.inserir(estudante);
+                        break;
+                        case Estado.INVALIDO: dados.incrementarInvalidos();
+                        break;
+                        default: System.out.println("Impossivel");
+                        break;
                     }
+                    
                     
                 } catch (Exception e) {
                     dados.incrementarInvalidos();
